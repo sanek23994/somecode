@@ -2,87 +2,125 @@
 #include <vector>
 #include <map>
 
-#define DEBUG (1)
+#define DEBUG (0)
 
 class Node
 {
 public:
 
-    Node(unsigned id):
-        id_(id),
+    Node(size_t parent):
+        parent_id_(parent),
         childs_()
          {}
-    unsigned getDiameter() const;
-    void addChild(const Node *child);
-    unsigned getId() const { return id_; }
+//    unsigned getDiameter() const;
+    void addChild(size_t child_id);
+//    unsigned getId() const { return id_; }
 private:
-    bool    root_;
-    unsigned id_;
-    std::vector<const Node *> childs_;
-    unsigned getMaxDepth() const;
+    size_t parent_id_;
+    std::vector<size_t> childs_;
+//    unsigned getMaxDepth() const;
 };
 
-void Node::addChild(const Node *child)
+void Node::addChild(const size_t child_id)
 {
-    childs_.push_back(child);
+    childs_.push_back(child_id);
 }
 
-unsigned Node::getMaxDepth() const
+//unsigned Node::getMaxDepth() const
+//{
+//    unsigned max = 0;
+//    if (DEBUG) std::cout << "Get Max depth for id = " << id_ << std::endl;
+//    for (std::vector<const Node *>::const_iterator it = childs_.begin(); it != childs_.end(); ++it)
+//    {
+//        unsigned tmp = (*it)->getMaxDepth();
+//        if (DEBUG) std::cout << "  Max depth for child id [" << (*it)->id_  << "] = " << tmp << std::endl;
+//        if (tmp > max) max = tmp;
+//    }
+//    if (!childs_.empty())
+//    {
+//        max++;
+//    }
+//    return max;
+//}
+
+//unsigned Node::getDiameter() const
+//{
+//    if (DEBUG) std::cout << "Get Diameter for id = " << id_ << std::endl;
+//    if (childs_.empty())
+//    {
+//        return 0;
+//    }
+//    unsigned firstLength = 0;
+//    unsigned secondLegth = 0;
+//    for (std::vector<const Node *>::const_iterator it = childs_.begin(); it != childs_.end(); ++it)
+//    {
+//        unsigned tmp = (*it)->getMaxDepth() + 1;
+//        if (DEBUG) std::cout << "  Max depth for child id [" << (*it)->id_  << "] = " << tmp << std::endl;
+
+//        if (tmp > firstLength)
+//        {
+//            firstLength = tmp;
+//        }
+//        else if (tmp > secondLegth)
+//        {
+//            secondLegth = tmp;
+//        }
+//        if (DEBUG) std::cout << "    firstLength = " << firstLength << std::endl;
+//        if (DEBUG) std::cout << "     secondLegth = " << secondLegth << std::endl;
+
+//    }
+//    return firstLength + secondLegth;
+//}
+
+class Graph
 {
-    unsigned max = 0;
-    if (DEBUG) std::cout << "Get Max depth for id = " << id_ << std::endl;
-    for (std::vector<const Node *>::const_iterator it = childs_.begin(); it != childs_.end(); ++it)
-    {
-        unsigned tmp = (*it)->getMaxDepth();
-        if (DEBUG) std::cout << "  Max depth for child id [" << (*it)->id_  << "] = " << tmp << std::endl;
-        if (tmp > max) max = tmp;
-    }
-    if (!childs_.empty())
-    {
-        max++;
-    }
-    return max;
+public:
+    Graph(size_t n);
+    ~Graph();
+
+    size_t AddNode(const Node &node);
+    const Node &getNode(size_t id) const;
+    Node &getNode(size_t id);
+    void calculateDiameter();
+
+private:
+    typedef std::vector<Node> graphStorage;
+    graphStorage    graph_;
+};
+
+Graph::Graph(size_t n)
+{
+    graph_.reserve(n);
 }
 
-unsigned Node::getDiameter() const
+Graph::~Graph()
 {
-    if (DEBUG) std::cout << "Get Diameter for id = " << id_ << std::endl;
-    if (childs_.empty())
-    {
-        return 0;
-    }
-    unsigned firstLength = 0;
-    unsigned secondLegth = 0;
-    for (std::vector<const Node *>::const_iterator it = childs_.begin(); it != childs_.end(); ++it)
-    {
-        unsigned tmp = (*it)->getMaxDepth() + 1;
-        if (DEBUG) std::cout << "  Max depth for child id [" << (*it)->id_  << "] = " << tmp << std::endl;
-
-        if (tmp > firstLength)
-        {
-            firstLength = tmp;
-        }
-        else if (tmp > secondLegth)
-        {
-            secondLegth = tmp;
-        }
-        if (DEBUG) std::cout << "    firstLength = " << firstLength << std::endl;
-        if (DEBUG) std::cout << "     secondLegth = " << secondLegth << std::endl;
-
-    }
-    return firstLength + secondLegth;
 }
 
-typedef std::map<unsigned, Node*> graphStorage;
+size_t Graph::AddNode(const Node &node)
+{
+    graph_.push_back(node);
+    return graph_.size() - 1;
+}
 
-void calculateDiameter(const graphStorage &graph)
+const Node & Graph::getNode(size_t id) const
+{
+    return graph_.at(id);
+}
+
+Node & Graph::getNode(size_t id)
+{
+    return graph_.at(id);
+}
+
+void Graph::calculateDiameter()
 {
     unsigned diameter = 0;
-    for (graphStorage::const_iterator it = graph.begin(); it != graph.end(); ++it)
+    for (graphStorage::const_iterator it = graph_.begin(); it != graph_.end(); ++it)
     {
-        unsigned tmp = (it->second)->getDiameter();
-        if (DEBUG) std::cout << "diameter for " << it->first << " = " << (it->second)->getDiameter() << std::endl;
-        if (tmp > diameter) diameter = tmp;
+//        unsigned tmp = it->getDiameter();
+//        if (DEBUG) std::cout << "diameter for " << it->first << " = " << (it->second)->getDiameter() << std::endl;
+//        if (tmp > diameter) diameter = tmp;
     }
     std::cout << "<<<<<<Diameter=" << diameter << ">>>>>>" << std::endl;
 }
@@ -91,40 +129,21 @@ int main()
 {
     unsigned n = 0;
     std::cin >> n;
-    graphStorage graph;
 
-    graph.insert(std::make_pair<int, Node*>(0, new Node(0)));
+    Graph graph(n);
+    Node root(0);
+    graph.AddNode(root);
+
     for (unsigned i = 0; i < n; ++i)
     {
-        unsigned current = 0;
-        std::cin >> current;
+        unsigned parent = 0;
+        std::cin >> parent;
 
-        Node *child = new Node(graph.size());
-        graph.insert(std::make_pair(graph.size(), child));
+        Node node(parent);
+        Node &parentNode = graph.getNode(parent);
+        size_t id = graph.AddNode(node);
+        parentNode.addChild(id);
 
-        std::map<unsigned, Node*>::iterator it = graph.find(current);
-        if (it == graph.end())
-        {
-            std::cout << __LINE__ << std::endl;
-            return -1;
-        }
-
-        Node *currentNode = it->second;
-        if (currentNode == NULL)
-        {
-            std::cout << __LINE__ << std::endl;
-            return -1;
-        }
-
-        currentNode->addChild(child);
-        if (DEBUG) std::cout << "Added node with id [" << child->getId() << "] to Node with id [" << currentNode->getId() << "]" << std::endl;
-        calculateDiameter(graph);
-    }
-
-
-    for (graphStorage::iterator it = graph.begin(); it != graph.end(); ++it)
-    {
-        delete it->second;
     }
 
     return 0;
